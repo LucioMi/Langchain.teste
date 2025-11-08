@@ -22,6 +22,13 @@ cp .env.example .env
 # Edite .env e preencha as variáveis necessárias
 ```
 
+### Configuração de modelo e prompt (Dia 5)
+- Defina o modelo da IA e o prompt do sistema via ambiente:
+  - `OPENAI_MODEL` → identificador do modelo da OpenAI
+  - `SYSTEM_PROMPT` → texto do prompt do sistema
+- Alternativamente, ajuste diretamente em `pyapp/chain.py`.
+- Após alterar `.env`, reinicie o servidor para aplicar.
+
 ## Executar servidor
 ```bash
 ./.venv/bin/python -m uvicorn pyapp.main:app --port 3000

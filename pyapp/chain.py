@@ -13,15 +13,13 @@ _MEMORY: Dict[str, deque] = defaultdict(lambda: deque(maxlen=8))
 
 def _get_llm() -> ChatOpenAI:
     # Usa a chave de API do ambiente; evita hardcode de modelo.
+    if settings.openai_model:
+        return ChatOpenAI(model=settings.openai_model, temperature=0)
     return ChatOpenAI(temperature=0)
 
 
 def _build_messages(user_id: Optional[str], text: str) -> List[BaseMessage]:
-    system = SystemMessage(
-        content=(
-            "Você é um assistente curto e objetivo. Responda em português e em uma única frase."
-        )
-    )
+    system = SystemMessage(content=settings.system_prompt)
     history: List[BaseMessage] = list(_MEMORY[user_id]) if user_id else []
     return [system, *history, HumanMessage(content=text)]
 
