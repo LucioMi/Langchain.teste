@@ -13,6 +13,10 @@ class Settings:
         "SYSTEM_PROMPT",
         "Você é um assistente curto e objetivo. Responda em português e em uma única frase.",
     )
+    memory_backend: str = os.getenv("MEMORY_BACKEND", "sqlite")
+    sqlite_db_path: str = os.getenv("SQLITE_DB_PATH", "pyapp.db")
+    memory_max_messages: int = int(os.getenv("MEMORY_MAX_MESSAGES", "16"))
+    memory_ttl_seconds: int = int(os.getenv("MEMORY_TTL_SECONDS", "0"))
     evolution_base_url: str = os.getenv("EVOLUTION_API_BASE_URL", "")
     evolution_token: str = os.getenv("EVOLUTION_API_TOKEN", "")
     evolution_instance: str = os.getenv("EVOLUTION_INSTANCE", "")

@@ -7,3 +7,5 @@ __pycache__/
 estudos/
 payload-n8n.json
 .DS_Store
+*.db
+*.sqlite

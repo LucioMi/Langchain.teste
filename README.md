@@ -44,6 +44,10 @@ cp .env.example .env
   ```
   - Retorna `{ ok, reply, usage, context_size, trace_id }`
   - Chamadas sequenciais aumentam `context_size` (memória leve por usuário)
+  - Comandos de memória:
+    - Lembrar: inclua "lembrar:" e o item (ex.: `lembrar: gosta de filmes de ação`)
+    - Esquecer: use "esquecer" para apagar preferências
+    - Preferências são incluídas como contexto adicional (máx. 5 itens)
 
 ## Webhook
 - Endpoint: `POST http://127.0.0.1:3000/webhook/teste.agente.codigo`
@@ -66,8 +70,18 @@ curl -X POST "http://127.0.0.1:3000/webhook/teste.agente.codigo" \
 - Spans principais:
   - Debug cadeia: `whatsapp_agent_chain` com `llm_call`
   - Webhook: `whatsapp_agent` com `llm_call` e `evolution_send`
+  - Eventos de memória: spans `memory_remember` / `memory_forget`
 
 ## Notas de Desenvolvimento
 - `.gitignore` já exclui itens sensíveis: `.env`, `estudos/`, `.venv`, `__pycache__/`, `node_modules/`, `dist/`, `payload-n8n.json`.
 - Não commitar `.env` nem dados privados.
 - Ajuste o prompt do sistema em `pyapp/chain.py` conforme o tom desejado.
+
+## Memória Persistente (Dia 6)
+- Backend: SQLite (arquivo definido em `SQLITE_DB_PATH`)
+- Variáveis:
+  - `MEMORY_BACKEND=sqlite`
+  - `SQLITE_DB_PATH=pyapp.db`
+  - `MEMORY_MAX_MESSAGES=16` (limite de histórico por usuário)
+  - `MEMORY_TTL_SECONDS=0` (0 desativa TTL; defina segundos para expirar histórico)
+- O histórico usa papéis `human` e `ai` e é carregado como contexto em cada chamada.

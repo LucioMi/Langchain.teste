@@ -45,18 +45,34 @@ async def debug_chain(text: str):
             except Exception:
                 pass
 
-        result = {"reply": "", "usage": None, "context_size": 0}
+        result = {"reply": "", "usage": None, "context_size": 0, "events": []}
         with langfuse.start_as_current_span(name="llm_call") as span:
             try:
                 rc = run_chain(text=text, user_id="debug-user")
-                result = {"reply": rc.get("reply", ""), "usage": rc.get("usage"), "context_size": rc.get("context_size", 0)}
-                span.update(output=result)
+                result = {
+                    "reply": rc.get("reply", ""),
+                    "usage": rc.get("usage"),
+                    "context_size": rc.get("context_size", 0),
+                    "events": rc.get("events", []),
+                }
+                span.update(output={"reply": result["reply"], "usage": result["usage"], "context_size": result["context_size"]})
             except Exception as e:
                 span.update(output={"error": str(e)})
-                result = {"reply": "Erro ao executar cadeia.", "usage": None, "context_size": 0}
+                result = {"reply": "Erro ao executar cadeia.", "usage": None, "context_size": 0, "events": []}
+
+        # Log memory events
+        for ev in result.get("events", []):
+            with langfuse.start_as_current_span(name=ev.get("type", "memory_event")) as ev_span:
+                ev_span.update(output=ev)
 
         root.update(output=result)
-        return {"ok": True, "reply": result["reply"], "usage": result["usage"], "context_size": result["context_size"], "trace_id": getattr(root, "trace_id", None)}
+        return {
+            "ok": True,
+            "reply": result["reply"],
+            "usage": result["usage"],
+            "context_size": result["context_size"],
+            "trace_id": getattr(root, "trace_id", None),
+        }
 
 @app.post("/webhook/teste.agente.codigo")
 async def webhook(req: Request):
@@ -95,9 +111,14 @@ async def webhook(req: Request):
                 try:
                     rc = run_chain(text=message, user_id=user_id)
                     reply = rc.get("reply", reply)
-                    span.update(output={"reply": reply, "usage": rc.get("usage")})
+                    span.update(output={"reply": reply, "usage": rc.get("usage"), "context_size": rc.get("context_size")})
                 except Exception as e:
                     span.update(output={"error": str(e)})
+
+            # Log memory events
+            for ev in (rc.get("events", []) if 'rc' in locals() else []):
+                with langfuse.start_as_current_span(name=ev.get("type", "memory_event")) as ev_span:
+                    ev_span.update(output=ev)
 
             with langfuse.start_as_current_span(name="evolution_send") as send_span:
                 try:
